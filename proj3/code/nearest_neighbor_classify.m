@@ -39,13 +39,21 @@ Useful functions:
 
 %}
 
+train_image_featsForVL = train_image_feats';
+test_image_featsForVL = test_image_feats';
+numTestImage = size(test_image_featsForVL,2);
+predicted_categories = cell(numTestImage,1);
+for i = 1:numTestImage
+    
+    tempDistance = vl_alldist2(test_image_featsForVL(:,i),train_image_featsForVL);
+    [minDistance minIndex] = min(tempDistance);
+    predicted_categories(i) = train_labels(minIndex);
+end
 
 
 
 
 
-
-
-
+end
 
 

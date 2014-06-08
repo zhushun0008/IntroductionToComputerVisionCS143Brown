@@ -55,6 +55,15 @@ Useful functions:
 
 
 
-
+total_SIFT_features = [];
+for i = 1 : size(image_paths, 1)
+    current_image = imread(char(image_paths(i)));
+    [location, features] = vl_dsift(single(current_image), 'Step', 16);
+    %[location, features] = vl_dsift(single(image), 'fast', 'Step', 5);
+    total_SIFT_features = [total_SIFT_features, features];
+end
+total_SIFT_features = double(total_SIFT_features);
+[vocabRotated, assignments] = vl_kmeans(total_SIFT_features, vocab_size);
+vocab = vocabRotated';
 
 

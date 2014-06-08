@@ -59,8 +59,26 @@ and using KD-trees.
 %}
 
 load('vocab.mat')
+vocab = vocab';
 vocab_size = size(vocab, 2);
+num_image = size(image_paths,1);
+image_feats = zeros(num_image,vocab_size);
 
-
-
+for i = 1:num_image
+    current_image = imread(char(image_paths(i)));
+    [location, features] = vl_dsift(single(current_image), 'fast', 'Step', 8);
+    current_histogram = zeros(1, vocab_size);
+    distances = vl_alldist2(double(features), double(vocab));
+    for j = 1 : size(distances, 1)
+        [min_value, min_index] = min(distances(j,:));
+        current_histogram(min_index) = current_histogram(min_index) + 1;
+    end
+    
+    %Normalize the histogram
+    current_histogram = double(current_histogram);
+    if norm(current_histogram) ~= 0
+        current_histogram = current_histogram / norm(current_histogram);
+    end
+    image_feats(i,:) = current_histogram;
+end
 

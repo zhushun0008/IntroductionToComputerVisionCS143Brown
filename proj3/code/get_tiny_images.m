@@ -20,8 +20,15 @@ function image_feats = get_tiny_images(image_paths)
 
 % suggested functions: imread, imresize
 
+image_path_size = size(image_paths);
+image_feats = zeros(image_path_size(1),16*16);
 
-
+for i=1:image_path_size(1)
+   current_image = imread(char(image_paths(i)));
+   resized_image = imresize(current_image, [16,16]);
+   image_vector = resized_image(:);
+   image_feats(i,:) = image_vector;
+end
 
 
 

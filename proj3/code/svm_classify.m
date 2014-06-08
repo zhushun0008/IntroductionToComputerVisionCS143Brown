@@ -47,6 +47,43 @@ Useful functions:
 %because unique() sorts them. This shouldn't really matter, though.
 categories = unique(train_labels); 
 num_categories = length(categories);
+[num_train_image, dim_feather] = size(train_image_feats);
+train_image_feats_VLformat = train_image_feats';
+LAMBDA = 0.00001;
+Ws = zeros(num_categories,dim_feather);
+Bs = zeros(num_categories,1);
+for i = 1 : num_categories
+    %Train all images with this label
+    category = char(categories(i));
+    matching_indices = strcmp(category, train_labels);
+    labels = ones(num_train_image, 1);
+    labels = double(labels * (-1));
+    labels(matching_indices) = 1;
+    %train this
+    [W B] = vl_svmtrain(train_image_feats_VLformat, labels, LAMBDA);
+    Ws(i,:) = W';
+    Bs(i) = B;
+    
+end
 
+%test for all test_image_feats and produces the output
 
+% for i = 1 : size(test_image_feats, 1)
+%     test_feat = test_image_feats(i, :);
+%     distances = [];
+%     for j = 1 : size(Bs, 1)
+%         distance = Ws(j, :) * test_feat' + Bs(j);
+%         distances(j) = distance;
+%     end
+%     maxIndices = find(distances == max(distances));
+%     predicted_categories(i, 1) = categories(maxIndices(1));
+% end
+
+% Use vectorization implementation.
+    test_image_feat_VLformat = test_image_feats';
+    scores = Ws * test_image_feat_VLformat + repmat(Bs,1,size(test_image_feat_VLformat,2));
+    [max_value, max_index] = max(scores,[],1);
+    predicted_categories = categories(max_index);
+    pause;
+end
 

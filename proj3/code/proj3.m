@@ -15,18 +15,23 @@
 %code does not crash when run unmodified and you can get a preview of how
 %results are presented.
 
-% FEATURE = 'tiny image';
+
 % FEATURE = 'bag of sift';
-FEATURE = 'placeholder';
+% FEATURE = 'placeholder';
+% FEATURE = 'tiny image';
+
+FEATURE = 'bag of sift';
 
 % CLASSIFIER = 'nearest neighbor';
 % CLASSIFIER = 'support vector machine';
-CLASSIFIER = 'placeholder';
+% CLASSIFIER = 'placeholder';
+% CLASSIFIER = 'nearest neighbor';
+CLASSIFIER = 'support vector machine';
 
 % set up paths to VLFeat functions. 
 % See http://www.vlfeat.org/matlab/matlab.html for VLFeat Matlab documentation
 % This should work on 32 and 64 bit versions of Windows, MacOS, and Linux
-run('vlfeat/toolbox/vl_setup')
+run('../vlfeat-0.9.18-bin/vlfeat-0.9.18/toolbox/vl_setup')
 
 data_path = '../data/'; %change if you want to work with a network copy
 
@@ -56,7 +61,8 @@ fprintf('Getting paths and labels for all train and test data\n')
 %   train_image_paths  1500x1   cell      
 %   test_image_paths   1500x1   cell           
 %   train_labels       1500x1   cell         
-%   test_labels        1500x1   cell          
+%   test_labels        1500x1   cell      
+
 
 %% Step 1: Represent each image with the appropriate feature
 % Each function to construct features should return an N x d matrix, where
@@ -76,7 +82,7 @@ switch lower(FEATURE)
         % YOU CODE build_vocabulary.m
         if ~exist('vocab.mat', 'file')
             fprintf('No existing visual word vocabulary found. Computing one from training images\n')
-            vocab_size = 400; %Larger values will work better (to a point) but be slower to compute
+            vocab_size = 100; %Larger values will work better (to a point) but be slower to compute
             vocab = build_vocabulary(train_image_paths, vocab_size);
             save('vocab.mat', 'vocab')
         end
