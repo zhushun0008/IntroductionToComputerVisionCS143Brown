@@ -37,7 +37,7 @@
 % This should work on 32 and 64 bit versions of Windows, MacOS, and Linux
 close all
 clear
-run('vlfeat/toolbox/vl_setup')
+%run('vlfeat/toolbox/vl_setup')
 
 [~,~,~] = mkdir('visualizations');
 
@@ -58,12 +58,23 @@ feature_params = struct('template_size', 36, 'hog_cell_size', 6);
 %% Step 1. Load positive training crops and random negative examples
 %YOU CODE 'get_positive_features' and 'get_random_negative_features'
 
-features_pos = get_positive_features( train_path_pos, feature_params );
+% set to true to refresh features
+refresh = true;
 
-num_negative_examples = 10000; %Higher will work strictly better, but you should start with 10000 for debugging
-features_neg = get_random_negative_features( non_face_scn_path, feature_params, num_negative_examples);
+if ~exist('features_pos.mat', 'file') || ~exist('features_neg.mat', 'file') || refresh
+    features_pos = get_positive_features( train_path_pos, feature_params );
 
-    
+    num_negative_examples = 15000; %Higher will work strictly better, but you should start with 10000 for debugging
+    features_neg = get_random_negative_features( non_face_scn_path, feature_params, num_negative_examples);
+
+    save('features_pos.mat', 'features_pos');   
+    save('features_neg.mat', 'features_neg');
+else
+    load('features_pos.mat');
+    load('features_neg.mat');
+end
+
+
 %% step 2. Train Classifier
 % Use vl_svmtrain on your training features to get a linear classifier
 % specified by 'w' and 'b'
@@ -73,9 +84,10 @@ features_neg = get_random_negative_features( non_face_scn_path, feature_params, 
 % work best e.g. 0.0001, but you can try other values
 
 %YOU CODE classifier training. Make sure the outputs are 'w' and 'b'.
-w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 31,1); %placeholder, delete
-b = rand(1); %placeholder, delete
 
+% w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 31,1); %placeholder, delete
+% b = rand(1); %placeholder, delete
+[w, b] = svm_classify(features_pos, features_neg);
 %% step 3. Examine learned classifier
 % You don't need to modify anything in this section. The section first
 % evaluates _training_ error, which isn't ultimately what we care about,

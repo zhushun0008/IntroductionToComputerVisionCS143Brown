@@ -35,5 +35,36 @@ function features_neg = get_random_negative_features(non_face_scn_path, feature_
 image_files = dir( fullfile( non_face_scn_path, '*.jpg' ));
 num_images = length(image_files);
 
-% placeholder to be deleted
-features_neg = rand(100, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
+% features_neg = zeros(num_samples,feature_params.hog_cell_size^2 * 31);
+cell_size = feature_params.hog_cell_size;
+numpatches_for_current_image = 100;
+features_neg_for_all_images = [];
+for i = 1:num_images
+    current_image = single(imread(fullfile(non_face_scn_path, image_files(i).name)))/255;
+    current_image_size = size(current_image);
+    features_neg_for_current_image = zeros(numpatches_for_current_image,feature_params.hog_cell_size^2 * 31);
+    window_x = current_image_size(1)-feature_params.template_size;
+    window_y = current_image_size(2)-feature_params.template_size;
+    if(window_x > 0 && window_y > 0)
+        for j = 1:numpatches_for_current_image 
+            randimaXIndex = randperm(window_x,1);
+            randimaYIndex = randperm(window_y,1);
+            current_patch = current_image(randimaXIndex:randimaXIndex+feature_params.template_size-1,...
+                            randimaYIndex:randimaYIndex+feature_params.template_size-1);
+            current_hog = vl_hog(current_patch,cell_size);
+            features_neg_for_current_image(j,:) = current_hog(:)';
+        end
+        features_neg_for_all_images = [features_neg_for_all_images;features_neg_for_current_image];
+    end
+end  
+
+rand_index = randperm(size(features_neg_for_all_images,1),num_samples); 
+features_neg = features_neg_for_all_images(rand_index,:);
+
+
+
+
+
+
+
+

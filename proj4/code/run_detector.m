@@ -46,6 +46,19 @@ bboxes = zeros(0,4);
 confidences = zeros(0,1);
 image_ids = cell(0,1);
 
+cellSize = feature_params.hog_cell_size;
+templateSize = feature_params.template_size;
+step = feature_params.hog_cell_size;
+threshold = 0.5;
+
+
+    %You can delete all of this below.
+    % Let's create 15 random detections per image
+%     cur_x_min = rand(15,1) * size(img,2);
+%     cur_y_min = rand(15,1) * size(img,1);
+%     cur_bboxes = [cur_x_min, cur_y_min, cur_x_min + rand(15,1) * 50, cur_y_min + rand(15,1) * 50];
+%     cur_confidences = rand(15,1) * 4 - 2; %confidences in the range [-2 2]
+%     cur_image_ids(1:15,1) = {test_scenes(i).name};
 for i = 1:length(test_scenes)
       
     fprintf('Detecting faces in %s\n', test_scenes(i).name)
@@ -55,20 +68,52 @@ for i = 1:length(test_scenes)
         img = rgb2gray(img);
     end
     
-    %You can delete all of this below.
-    % Let's create 15 random detections per image
-    cur_x_min = rand(15,1) * size(img,2);
-    cur_y_min = rand(15,1) * size(img,1);
-    cur_bboxes = [cur_x_min, cur_y_min, cur_x_min + rand(15,1) * 50, cur_y_min + rand(15,1) * 50];
-    cur_confidences = rand(15,1) * 4 - 2; %confidences in the range [-2 2]
-    cur_image_ids(1:15,1) = {test_scenes(i).name};
     
+    img_size = size(img);    
+    scale = 1.2;
+    scaled_size = img_size * scale;
+    cur_bboxes = zeros(0, 4);
+    cur_confidences = zeros(0,1);
+    cur_image_ids = cell(0,1);
+    while scaled_size(1) >= feature_params.template_size && scaled_size(2) >= feature_params.template_size
+        resized_im = imresize(img, scaled_size);
+        hog = vl_hog(single(resized_im), feature_params.hog_cell_size);
+                
+        for y = 1 : size(hog, 1) - step + 1
+            for x = 1 : size(hog, 2) - step + 1
+                window = hog(y : y + step - 1, x : x + step - 1, :);
+                window = reshape(window, 31 * step * step, 1);
+                %calculate response
+                confidence = w' * window + b;
+                % it is a face..
+                if confidence > threshold
+                    bbox = zeros(1,4);
+                    bbox(1) =  floor((x - 1) * cellSize * (1.0 / scale) + 1);
+                    bbox(2) =  floor((y - 1) * cellSize * (1.0 / scale) + 1);
+                    bbox(3) =  floor(bbox(1) + templateSize * (1.0 / scale) - 1);
+                    bbox(4) =  floor(bbox(2) + templateSize * (1.0 / scale) - 1);
+                    cur_bboxes = [cur_bboxes; bbox];
+                    cur_confidences = [cur_confidences; confidence];
+                    cur_image_ids = [cur_image_ids; test_scenes(i).name];
+                end  
+            end
+        end
+        
+        scale = scale * 0.8;
+        scaled_size = img_size * scale;
+    end
+    
+    
+    
+    
+
     %non_max_supr_bbox can actually get somewhat slow with thousands of
     %initial detections. You could pre-filter the detections by confidence,
     %e.g. a detection with confidence -1.1 will probably never be
     %meaningful. You probably _don't_ want to threshold at 0.0, though. You
     %can get higher recall with a lower threshold. You don't need to modify
     %anything in non_max_supr_bbox, but you can.
+    
     [is_maximum] = non_max_supr_bbox(cur_bboxes, cur_confidences, size(img));
 
     cur_confidences = cur_confidences(is_maximum,:);
